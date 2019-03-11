@@ -1,17 +1,3 @@
 allprojects {
-  task listAllJars {
-      doLast {
-          configurations.compile.each { File file -> println file.name }
-      }
-  }
-  task listLocalJars {
-    doLast {
-      def userDir = System.getProperty("user.dir")
-      configurations.compile.each {
-        if (it.absolutePath.contains(userDir)) {
-          println it.name
-        }
-      }
-    }
-  }
+  task snykAllDeps(type: DependencyReportTask) {}
 }
