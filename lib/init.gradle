@@ -1,3 +1,33 @@
-allprojects {
-  task snykAllDeps(type: DependencyReportTask) {}
+import groovy.json.JsonOutput
+
+rootProject {
+
+    task printSolvedDepsTreeInJson {
+        def out = [:]
+        def depsToList
+        depsToList = { deps ->
+            return deps.collect { d ->
+                def row = ['group': d.moduleGroup, 'name': d.moduleName, 'version': d.moduleVersion]
+                def subDeps = depsToList(d.children)
+                if (subDeps.size() > 0) {
+                    row['children'] = subDeps
+                }
+                return row
+            }
+        }
+
+        doLast {
+            allprojects.each { proj ->
+                def accum = []
+                out[proj.name] = accum
+                if (proj.configurations.size() > 0) {
+                    def snykConf = proj.configurations.create('snykMergedDepsConf')
+                    proj.configurations.findAll({ it.name != 'snykMergedDepsConf' }).each({snykConf.extendsFrom(it)})
+                    out[proj.name] = depsToList(snykConf.resolvedConfiguration.firstLevelModuleDependencies)
+                }
+            }
+            println JsonOutput.toJson(out)
+            //new File('snyk.json').write(JsonOutput.toJson(out))
+        }
+    }
 }
