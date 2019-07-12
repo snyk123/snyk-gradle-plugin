@@ -8,7 +8,7 @@ import chalk from 'chalk';
 import debugModule = require('debug');
 import {
   SingleSubprojectInspectOptions, MultiSubprojectInspectOptions, SinglePackageResult, MultiProjectResult,
-  PluginMetadata, InspectOptions, InspectResult, isMultiSubProject,
+  PluginMetadata, InspectOptions, InspectResult, isMultiSubProject, FlagSpecs,
 } from '@snyk/cli-interface/dist/legacy/plugin';
 import { DepTree, ScannedProject } from '@snyk/cli-interface/dist/legacy/common';
 
@@ -107,6 +107,29 @@ export async function inspect(
   return {
     plugin,
     package: depTreeAndDepRootNames.depTree,
+  };
+}
+
+export function flags(): FlagSpecs {
+  return {
+    gradleSubProject: {
+      type: 'string',
+      docPlainText: 'For Gradle "multi project" configurations, test a specific sub-project.',
+    },
+    allSubProjects: {
+      type: 'boolean',
+      docPlainText: 'For "multi project" configurations, test all sub-projects.',
+    },
+    configurationMatching: {
+      type: 'string',
+      docPlainText: "Resolve dependencies using only configuration(s) that match the provided Java regular expression, e.g. '^releaseRuntimeClasspath$'.",
+      validator: (x) => { new RegExp(x) },
+    },
+    configurationAttributes: {
+      type: 'string',
+      docPlainText: "Select certain values of configuration attributes to resolve the dependencies. E.g.: 'buildtype:release,usage:java-runtime'",
+    },
+
   };
 }
 
