@@ -94,9 +94,9 @@ test('multi-project: only sub-project has deps, none returned for main', async (
 });
 
 let wrapperIsCompatibleWithJvm = true;
-let JDK = process.env.JDK;
+const JDK = process.env.JDK;
 if (JDK) {
-  let major = parseInt(JDK.split(".")[0]);
+  const major = parseInt(JDK.split('.')[0]);
   if (major >= 13) {
     // see https://github.com/gradle/gradle/issues/8681
     wrapperIsCompatibleWithJvm = false;
@@ -107,13 +107,13 @@ if (wrapperIsCompatibleWithJvm) {
   test('multi-project: using gradle via wrapper', async (t) => {
       const result = await inspect('.',
       path.join(fixtureDir('multi-project gradle wrapper'), 'build.gradle'));
-    t.match(result.package.name, '.',
+      t.match(result.package.name, '.',
       'returned project name is not sub-project');
-    t.match(result.meta!.gradleProjectName, 'root-proj',
+      t.match(result.meta!.gradleProjectName, 'root-proj',
         'returned project name is not sub-project');
-    t.equal(result.meta!.versionBuildInfo!.gradleVersion, '5.4.1');
-    t.deepEqual(result.plugin.meta!.allSubProjectNames, ['root-proj', 'subproj']);
-    t.notOk(result.package.dependencies);
+      t.equal(result.meta!.versionBuildInfo!.gradleVersion, '5.4.1');
+      t.deepEqual(result.plugin.meta!.allSubProjectNames, ['root-proj', 'subproj']);
+      t.notOk(result.package.dependencies);
   });
 }
 

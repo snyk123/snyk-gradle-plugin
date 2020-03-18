@@ -7,6 +7,7 @@ import {MissingSubProjectError} from './errors';
 import chalk from 'chalk';
 import {legacyCommon, legacyPlugin as api} from '@snyk/cli-interface';
 import debugModule = require('debug');
+import { parseTree } from './parse-gradle';
 
 type DepTree = legacyCommon.DepTree;
 type ScannedProject = legacyCommon.ScannedProject;
@@ -360,6 +361,9 @@ async function getAllDeps(root: string, targetFile: string, options: Options):
       cleanupCallback();
     }
     const extractedJson = extractJsonFromScriptOutput(stdoutText);
+    const parseResult = await parseTree(stdoutText, options.dev as boolean);
+    extractedJson.projects = parseResult.data as ProjectsDict;
+
     const versionBuildInfo = getVersionBuildInfo(gradleVersionOutput);
     if (versionBuildInfo) {
       extractedJson.versionBuildInfo = versionBuildInfo;
