@@ -2,7 +2,7 @@ import { legacyCommon } from '@snyk/cli-interface';
 
 const newline = /[\r\n]+/g;
 const logLabel = /^SNYKDEPS\s*/gm;
-const digraph = /digraph([\s\S]*?)}/g;
+const digraph = /digraph(.*){([\s\S]*?)}/g; 
 
 // Parse the output from 'gradlew snykResolvedDeps'
 export function parseTree(text: string, withDev: boolean) {
@@ -119,7 +119,7 @@ function createPackage(pkgStr: string) {
 }
 
 function dequote(str: string) {
-  return str.slice(str.indexOf('"') + 1, str.lastIndexOf('"'));
+  return str.trim().slice(str.indexOf('"') + 1, str.lastIndexOf('"'));
 }
 
 function getConstraint(str: string) {
