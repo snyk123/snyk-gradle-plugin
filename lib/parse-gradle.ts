@@ -119,7 +119,7 @@ function createPackage(pkgStr: string) {
 }
 
 function dequote(str: string) {
-  return str.trim().slice(str.indexOf('"') + 1, str.lastIndexOf('"'));
+  return str.slice(str.indexOf('"') + 1, str.lastIndexOf('"'));
 }
 
 function getConstraint(str: string) {
