@@ -228,6 +228,7 @@ function getDepsSubProject(root: string, subProject: string, allProjectDeps: Jso
     },
   };
 }
+
 async function getAllDepsAllProjects(root: string, targetFile: string, options: Options): Promise<ScannedProject[]> {
   const allProjectDeps = await getAllDeps(root, targetFile, options);
   const basePackageName = path.basename(root);
@@ -472,7 +473,7 @@ function buildArgs(
     initGradlePath: string,
     options: Options) {
   const args: string[] = [];
-  args.push('snykResolvedDepsJson', '-q');
+  args.push('snykResolvedDeps', '-q');
   if (targetFile) {
     if (!fs.existsSync(path.resolve(root, targetFile))) {
       throw new Error('File not found: "' + targetFile + '"');
