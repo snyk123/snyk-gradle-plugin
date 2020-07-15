@@ -8,6 +8,7 @@ import * as chalk from 'chalk';
 import { DepGraphBuilder, PkgManager, DepGraph } from '@snyk/dep-graph';
 import { legacyCommon, legacyPlugin as api } from '@snyk/cli-interface';
 import debugModule = require('debug');
+import { writeContentsToFileSwallowingErrors } from './write-to-file';
 
 type ScannedProject = legacyCommon.ScannedProject;
 
@@ -520,6 +521,13 @@ async function getAllDeps(
       extractedJson.versionBuildInfo = versionBuildInfo;
     }
 
+    // write extracted json to file
+    logger(`Writing full JSON to snyk-gradle.json file`);
+    writeContentsToFileSwallowingErrors(
+      'snyk-gradle.json',
+      JSON.stringify(extractedJson),
+    );
+
     // processing snykGraph from gradle task to depGraph
     for (const projectId in extractedJson.projects) {
       const { snykGraph, projectVersion } = extractedJson.projects[projectId];
@@ -530,10 +538,18 @@ async function getAllDeps(
         projectName = `${path.basename(root)}/${projectId}`;
       }
 
-      extractedJson.projects[projectId].depGraph = await buildGraph(
+      const graph = await buildGraph(
         snykGraph,
         projectName,
         projectVersion,
+      );
+
+      extractedJson.projects[projectId].depGraph = graph;
+
+      logger(`Writing ${projectId} graph to snyk-gradle-${projectId}-graph.json file`);
+      writeContentsToFileSwallowingErrors(
+        `snyk-gradle-${projectId}-graph.json`,
+        JSON.stringify(graph.toJSON()),
       );
       // this property usage ends here
       delete extractedJson.projects[projectId].snykGraph;
