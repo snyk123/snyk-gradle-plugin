@@ -29,9 +29,9 @@ const isWin = /^win/.test(os.platform());
 const quot = isWin ? '"' : "'";
 
 const cannotResolveVariantMarkers = [
-  'Cannot choose between the following',
-  'Could not select value from candidates',
-  'Unable to find a matching variant of project',
+  /[Cc]annot choose between the following/,
+  /[Cc]ould not select value from candidates/,
+  /[Uu]nable to find a matching variant of project/,
 ];
 
 // TODO(kyegupov): the types below will be extracted to a common plugin interface library
@@ -562,7 +562,7 @@ message from above, starting with ===== DEBUG INFORMATION START =====.`;
     // There are no automated tests for this yet (setting up Android SDK is quite problematic).
     // See test/manual/README.md
 
-    if (cannotResolveVariantMarkers.find((m) => error.message.includes(m))) {
+    if (cannotResolveVariantMarkers.find((m) => m.test(error.message))) {
       // Extract attribute information via JSONATTRS marker:
       const jsonAttrs = JSON.parse(
         (error.message as string)
