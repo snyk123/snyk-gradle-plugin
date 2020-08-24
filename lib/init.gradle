@@ -55,11 +55,11 @@ import java.util.regex.Matcher
 class SnykGraph {
    def nodes
    def rootId
-   SnykGraph(rootId) { 
+   SnykGraph(rootId) {
        this.nodes = [:]
        this.rootId = rootId
    }
-   
+
    def setNode(key, value) {
        if(!key) {
            return
@@ -98,8 +98,9 @@ class SnykGraph {
    }
 }
 
-def loadGraph(Iterable deps, SnykGraph graph, parentId, currentChain) {
-        deps.each { d -> 
+def loadGraph(Iterable deps, SnykGraph graph, parentId, currentChain, Boolean onlyTopLevelDependencies) {
+        println('*** deps' + deps)
+        deps.each { d ->
             def childId = "${d.moduleGroup}:${d.moduleName}@${d.moduleVersion}"
             if(!graph.nodes.get(childId)) {
                 def childDependency = ['name': "${d.moduleGroup}:${d.moduleName}", 'version': d.moduleVersion]
@@ -109,17 +110,19 @@ def loadGraph(Iterable deps, SnykGraph graph, parentId, currentChain) {
             //  each for a different configuration. In this case, we need to merge the dependencies.
             if(!currentChain.contains(childId) && d.children) {
                 currentChain.add(childId)
-                loadGraph(d.children, graph, childId, currentChain)
+                if(!onlyTopLevelDependencies) {
+                    loadGraph(d.children, graph, childId, currentChain, false)
+                }
             }
             graph.setEdge(parentId, childId)
         }
     }
 
-def getSnykGraph(Iterable deps) {
+def getSnykGraph(Iterable deps, Boolean onlyTopLevelDependencies) {
     def rootId = 'root-node'
     def graph = new SnykGraph(rootId)
     def currentChain = new HashSet()
-    loadGraph(deps, graph, rootId, currentChain) 
+    loadGraph(deps, graph, rootId, currentChain, onlyTopLevelDependencies)
     return graph.nodes
 }
 
@@ -130,6 +133,8 @@ def snykMergedDepsConfExecuted = false
 allprojects { everyProj ->
     task snykResolvedDepsJson {
         def onlyProj = project.hasProperty('onlySubProject') ? onlySubProject : null
+        def onlyTopLevelDependencies = project.hasProperty('onlyTopLevelDependencies') ? true : false
+        println('SNYKECHO onlyTopLevelDependencies is ' + onlyTopLevelDependencies)
 
         def confNameFilter = (project.hasProperty('configuration')
             ? Pattern.compile(configuration, Pattern.CASE_INSENSITIVE)
@@ -259,7 +264,7 @@ allprojects { everyProj ->
                         println('SNYKECHO converting gradle graph to snyk-graph format')
                         projectsDict[proj.name] = [
                             'targetFile': findProject(proj.path).buildFile.toString(),
-                            'snykGraph': getSnykGraph(gradleFirstLevelDeps),
+                            'snykGraph': getSnykGraph(gradleFirstLevelDeps, onlyTopLevelDependencies),
                             'projectVersion': proj.version.toString()
                         ]
                     } else {

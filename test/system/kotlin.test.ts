@@ -51,6 +51,51 @@ if (kotlinSupported) {
       const graphObject: any = JSON.parse(
         JSON.stringify(result.dependencyGraph),
       );
+      t.same(nodeIds.length, 15, '15 deps returned, including transitives');
+      t.ok(graphObject.graph.nodes[0].deps.length === 6, 'top level deps');
+    },
+  );
+  test(
+    'build.gradle.kts files are supported with --top-level-dependencies',
+    { timeout: 150000 },
+    async (t) => {
+      const result = await inspect(
+        '.',
+        path.join(fixtureDir('gradle-kts'), 'build.gradle.kts'),
+        {
+          'top-level-dependencies': true,
+        }
+      );
+      t.match(
+        result.dependencyGraph.rootPkg.name,
+        '.',
+        'returned project name is not sub-project',
+      );
+      t.match(
+        result.meta!.gradleProjectName,
+        'gradle-kts',
+        'returned new project name is not sub-project',
+      );
+
+      const pkgs = result.dependencyGraph.getDepPkgs();
+      const nodeIds: string[] = [];
+      Object.keys(pkgs).forEach((id) => {
+        nodeIds.push(`${pkgs[id].name}@${pkgs[id].version}`);
+      });
+
+      t.notOk(
+        nodeIds.indexOf('org.jetbrains.kotlin:kotlin-stdlib-common@1.3.21') !==
+          -1,
+        'correct version of a dependency is found',
+      );
+
+      t.same(nodeIds.length, 6, 'only 6 top level deps returned, no transitives');
+
+      // double parsing to have access to internal depGraph data, no methods available to properly
+      // return the deps nodeIds list that belongs to a node
+      const graphObject: any = JSON.parse(
+        JSON.stringify(result.dependencyGraph),
+      );
       t.ok(graphObject.graph.nodes[0].deps.length === 6, 'top level deps');
     },
   );

@@ -58,6 +58,10 @@ export interface GradleInspectOptions {
   // Gradle process just never exits, from the Node's standpoint.
   // Leaving default usage `--no-daemon`, because of backwards compatibility
   daemon?: boolean;
+
+  // boolean to specify if the tree generation should stop at top level dependencies
+  'top-level-dependencies'?: boolean;
+
 }
 
 type Options = api.InspectOptions & GradleInspectOptions;
@@ -85,6 +89,7 @@ export async function inspect(
   if (!options) {
     options = { dev: false };
   }
+  debugLog('options' + options);
   let subProject = (options as api.SingleSubprojectInspectOptions).subProject;
   if (subProject) {
     subProject = subProject.trim();
@@ -719,6 +724,11 @@ function buildArgs(
     args.push('-PonlySubProject=' + (options.subProject || '.'));
   }
 
+
+  if (options['top-level-dependencies']) {
+    args.push('-PonlyTopLevelDependencies');
+  }
+
   args.push('-I ' + initGradlePath);
 
   if (options.args) {
@@ -740,7 +750,6 @@ function buildArgs(
       args[i + 1] = '';
     }
   });
-
   return args;
 }
 
